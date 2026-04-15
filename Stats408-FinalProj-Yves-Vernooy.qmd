@@ -1,0 +1,57 @@
+---
+title: "Exploration of wild-type and transgenic variants of Arabidopsis thaliana"
+author: "Yves Vernooy"
+format: dashboard
+---
+
+```{r}
+#| message: false
+
+library(knitr)
+library(plotly)
+library(tidyverse)
+library(dataRetrieval)
+library(lubridate)
+library(GEOquery)
+library(ggplot2)
+
+# read in data
+getGEOSuppFiles("GSE277320")
+```
+
+```{r}
+
+counts <- read.delim("GSE277320/GSE277320_CountsMatrix.txt.gz", row.names = 1)
+
+data_sizes <- colSums(counts)
+data_df <- data.frame(
+  sample = names(data_sizes),
+  total_counts = data_sizes
+)
+
+ggplot(data_df, aes(x = reorder(sample, total_counts), y = total_counts / 1000000)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(
+    title = "Data per Sample",
+    x = "Sample",
+    y = "Total Counts (millions)"
+  )
+
+
+
+log_counts <- log2(counts+1)
+log_counts_long <- data.frame(
+  expression = unlist(log_counts),
+  sample = rep(colnames(log_counts), each = nrow(log_counts))
+)
+
+ggplot(log_counts_long, aes(x = expression, color = sample)) +
+  geom_density() +
+  labs(
+    title = "Log2 Counts Across Samples",
+    x = "Log2(Count + 1)",
+    y = "Density"
+  )
+
+```
